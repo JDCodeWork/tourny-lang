@@ -1,36 +1,21 @@
+use num_enum::TryFromPrimitive;
+
 #[derive(Debug)]
 pub struct Error;
 
-#[derive(Debug)]
+#[derive(Debug, TryFromPrimitive)]
+#[repr(u8)]
 pub enum OpCode {
-    Push,
+    PushNum,
+    PushStr,
     Pop,
-    EOC, // End Of Command
-    _COUNT,
+    Print,
+    Eoc, // End Of Command
 }
 
 #[derive(Debug)]
 pub enum MarshalError {
     InvalidBytecode,
-}
-
-impl TryFrom<u8> for OpCode {
-    type Error = MarshalError;
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        if value > (OpCode::_COUNT as u8) - 1 {
-            return Err(MarshalError::InvalidBytecode);
-        }
-
-        let opcode = match value {
-            x if x == (OpCode::Push as u8) => OpCode::Push,
-            x if x == (OpCode::Pop as u8) => OpCode::Pop,
-            x if x == (OpCode::EOC as u8) => OpCode::EOC,
-            _ => return Err(MarshalError::InvalidBytecode),
-        };
-
-        Ok(opcode)
-    }
 }
 
 impl From<OpCode> for u8 {
@@ -42,18 +27,21 @@ impl From<OpCode> for u8 {
 #[derive(Debug)]
 enum Value {
     Number(u8),
+    String(u8),
 }
 
 #[derive(Default, Debug)]
 pub struct VM {
     stack: Vec<Value>,
-    code: Vec<u8>,
+    bytes: Vec<u8>,
+
+    pub strings: Vec<String>, // TODO: remove public access
     ip: usize,
 }
 
 impl VM {
     pub fn interpret(&mut self, mut code: Vec<u8>) {
-        self.code.append(&mut code);
+        self.bytes.append(&mut code);
 
         if self.run().is_err() {
             eprintln!("Hubo un Error.");
@@ -69,10 +57,11 @@ impl VM {
             };
 
             match op {
-                OpCode::Push => self.push(),
+                OpCode::PushNum => self.push_num(),
+                OpCode::PushStr => self.push_str(),
                 OpCode::Pop => self.pop().map(|_| ()),
-                OpCode::EOC => return Ok(()),
-                OpCode::_COUNT => return Err(Error),
+                OpCode::Print => self.print(),
+                OpCode::Eoc => return Ok(()),
             }?
         }
     }
@@ -85,7 +74,7 @@ impl VM {
         }
     }
 
-    fn push(&mut self) -> Result<(), Error> {
+    fn push_num(&mut self) -> Result<(), Error> {
         let byte = self.read_byte();
 
         self.stack.push(Value::Number(byte));
@@ -93,8 +82,30 @@ impl VM {
         Ok(())
     }
 
+    fn push_str(&mut self) -> Result<(), Error> {
+        let byte = self.read_byte();
+
+        self.stack.push(Value::String(byte));
+
+        Ok(())
+    }
+
+    fn print(&self) -> Result<(), Error> {
+        let Some(value) = self.stack.last() else {
+            println!();
+            return Err(Error);
+        };
+
+        match *value {
+            Value::Number(num) => println!("{num}"),
+            Value::String(idx) => println!("{}", self.strings[idx as usize]),
+        };
+
+        Ok(())
+    }
+
     fn read_byte(&mut self) -> u8 {
-        let byte = self.code[self.ip];
+        let byte = self.bytes[self.ip];
         self.ip += 1;
 
         byte
