@@ -8,14 +8,10 @@ pub struct Error;
 pub enum OpCode {
     PushNum,
     PushStr,
+    AddPlayer,
     Pop,
     Print,
     Eoc, // End Of Command
-}
-
-#[derive(Debug)]
-pub enum MarshalError {
-    InvalidBytecode,
 }
 
 impl From<OpCode> for u8 {
@@ -31,11 +27,17 @@ enum Value {
 }
 
 #[derive(Default, Debug)]
+struct TmtState {
+    players: Vec<u8>,
+}
+
+#[derive(Default, Debug)]
 pub struct VM {
     stack: Vec<Value>,
     bytes: Vec<u8>,
 
     pub strings: Vec<String>, // TODO: remove public access
+    state: TmtState,
     ip: usize,
 }
 
@@ -59,11 +61,18 @@ impl VM {
             match op {
                 OpCode::PushNum => self.push_num(),
                 OpCode::PushStr => self.push_str(),
+                OpCode::AddPlayer => self.add_player(),
                 OpCode::Pop => self.pop().map(|_| ()),
                 OpCode::Print => self.print(),
                 OpCode::Eoc => return Ok(()),
             }?
         }
+    }
+
+    fn add_player(&mut self) -> Result<(), Error> {
+        let byte = self.read_byte();
+        self.state.players.push(byte);
+        Ok(())
     }
 
     fn pop(&mut self) -> Result<Value, Error> {
@@ -83,7 +92,7 @@ impl VM {
     }
 
     fn push_str(&mut self) -> Result<(), Error> {
-        let byte = self.read_byte();
+        let byte = self.read_byte(); // Read string index from bytecode
 
         self.stack.push(Value::String(byte));
 
@@ -92,16 +101,28 @@ impl VM {
 
     fn print(&self) -> Result<(), Error> {
         let Some(value) = self.stack.last() else {
-            println!();
             return Err(Error);
         };
 
-        match *value {
-            Value::Number(num) => println!("{num}"),
-            Value::String(idx) => println!("{}", self.strings[idx as usize]),
+        let Value::Number(option) = value else {
+            return Err(Error);
         };
 
+        match *option {
+            1 => self.print_players(),
+            _ => return Err(Error),
+        }
+
         Ok(())
+    }
+
+    fn print_players(&self) {
+        for player in self.state.players.iter() {
+            let name = &self.strings[*player as usize];
+
+            print!(" {name} | ");
+        }
+        println!();
     }
 
     fn read_byte(&mut self) -> u8 {

@@ -14,7 +14,6 @@ El MVP cubre únicamente:
 ## Ejemplo rápido (MVP)
 
 ```
-TORNEO "Liga Tenis de Mesa"
 JUGADOR "Ana"
 JUGADOR "Luis"
 JUGADOR "Marta"

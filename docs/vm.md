@@ -12,7 +12,6 @@ La sintaxis de comandos está en `docs/sintaxis.md`. La lista de mejoras post‑
 
 ## Estado mínimo en memoria (MVP)
 
-- `torneo`: string
 - `jugadores`: lista de strings
 - `partidos`: lista de pares (A, B)
 - `resultados`: mapa (A,B) -> (a,b)
@@ -34,7 +33,6 @@ Nota: no hay semilla en MVP; la reproducibilidad queda para post‑MVP.
 - `PUSH_STR <s>`
 - `PUSH_INT <n>`
 
-- `TORNEO_SET` (pop: name)
 - `JUGADOR_ADD` (pop: name)
 
 - `EMPAREJAR_GEN` (genera `partidos`)
@@ -48,12 +46,6 @@ Nota: no hay semilla en MVP; la reproducibilidad queda para post‑MVP.
 - `GANADOR_PRINT` (imprime líder/es)
 
 ## Mapeo comando -> bytecode (MVP)
-
-**TORNEO**
-```
-TORNEO "Liga"
-=> PUSH_STR "Liga"; TORNEO_SET
-```
 
 **JUGADOR**
 ```

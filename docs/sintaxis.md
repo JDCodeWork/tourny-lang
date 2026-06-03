@@ -9,12 +9,6 @@ Todo lo que no sea necesario para el MVP está listado en `docs/timeline.md`.
 
 ## Comandos (MVP)
 
-### TORNEO
-```
-TORNEO "Nombre"
-```
-Define el nombre del torneo.
-
 ### JUGADOR
 ```
 JUGADOR "Nombre"
@@ -60,7 +54,6 @@ Muestra el/los líder(es) actual(es) según la tabla:
 ## Ejemplo completo (MVP)
 
 ```
-TORNEO "Liga Tenis de Mesa"
 JUGADOR "Ana"
 JUGADOR "Luis"
 JUGADOR "Marta"
@@ -79,9 +72,8 @@ GANADOR
 
 ```
 linea      := comando ;
-comando    := torneo | jugador | emparejar | resultado | tabla | ganador ;
+comando    := jugador | emparejar | resultado | tabla | ganador ;
 
-torneo     := "TORNEO" cadena ;
 jugador    := "JUGADOR" cadena ;
 emparejar  := "EMPAREJAR" ;
 resultado  := "RESULTADO" cadena "vs" cadena int "-" int ;

@@ -6,22 +6,13 @@ use vm::{OpCode as Op, VM};
 fn main() {
     let strs = vec!["Juan".to_string(), "Carlos".to_string()];
     let code: Vec<u8> = bytecode![
-        Op::PushNum,
+        Op::AddPlayer,
+        0,
+        Op::AddPlayer,
         1,
         Op::PushNum,
-        4,
-        Op::PushStr,
         1,
-        
         Op::Print,
-        Op::Pop,
-        
-        Op::Print,
-        Op::Pop,
-        
-        Op::Print,
-        Op::Pop,
-        
         Op::Eoc
     ];
 
