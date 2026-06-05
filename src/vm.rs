@@ -1,5 +1,7 @@
 use num_enum::TryFromPrimitive;
 
+use crate::tournment::{Player, State};
+
 #[derive(Debug)]
 pub struct Error;
 
@@ -8,8 +10,12 @@ pub struct Error;
 pub enum OpCode {
     PushNum,
     PushStr,
-    AddPlayer,
     Pop,
+
+    AddPlayer,
+
+    MakeGroups,
+
     Print,
     Eoc, // End Of Command
 }
@@ -21,14 +27,12 @@ impl From<OpCode> for u8 {
 }
 
 #[derive(Debug)]
+pub struct StrRef(pub u8);
+
+#[derive(Debug)]
 enum Value {
     Number(u8),
-    String(u8),
-}
-
-#[derive(Default, Debug)]
-struct TmtState {
-    players: Vec<u8>,
+    String(StrRef),
 }
 
 #[derive(Default, Debug)]
@@ -37,7 +41,7 @@ pub struct VM {
     bytes: Vec<u8>,
 
     pub strings: Vec<String>, // TODO: remove public access
-    state: TmtState,
+    state: State,
     ip: usize,
 }
 
@@ -64,14 +68,20 @@ impl VM {
                 OpCode::AddPlayer => self.add_player(),
                 OpCode::Pop => self.pop().map(|_| ()),
                 OpCode::Print => self.print(),
+                OpCode::MakeGroups => self.make_groups(),
                 OpCode::Eoc => return Ok(()),
             }?
         }
     }
 
+    fn make_groups(&mut self) -> Result<(), Error> {
+        self.state.make_groups();
+        Ok(())
+    }
+
     fn add_player(&mut self) -> Result<(), Error> {
         let byte = self.read_byte();
-        self.state.players.push(byte);
+        self.state.add_player(StrRef(byte));
         Ok(())
     }
 
@@ -94,11 +104,12 @@ impl VM {
     fn push_str(&mut self) -> Result<(), Error> {
         let byte = self.read_byte(); // Read string index from bytecode
 
-        self.stack.push(Value::String(byte));
+        self.stack.push(Value::String(StrRef(byte)));
 
         Ok(())
     }
 
+    // TODO: Extract into a dedicated module to decouple the VM implementation from the interface
     fn print(&self) -> Result<(), Error> {
         let Some(value) = self.stack.last() else {
             return Err(Error);
@@ -110,6 +121,7 @@ impl VM {
 
         match *option {
             1 => self.print_players(),
+            2 => self.print_groups(),
             _ => return Err(Error),
         }
 
@@ -117,12 +129,24 @@ impl VM {
     }
 
     fn print_players(&self) {
-        for player in self.state.players.iter() {
-            let name = &self.strings[*player as usize];
+        for Player { name } in self.state.iter_players() {
+            let name = &self.strings[name.0 as usize];
 
             print!(" {name} | ");
         }
         println!();
+    }
+
+    fn print_groups(&self) {
+        for (idx, group) in self.state.iter_groups().enumerate() {
+            print!("Group {}: ", idx + 1);
+
+            for player_id in group.iter_players() {
+                let name_id = self.state.get_player(player_id).name.0;
+                print!("{}, ", self.strings[name_id as usize]);
+            }
+            println!();
+        }
     }
 
     fn read_byte(&mut self) -> u8 {

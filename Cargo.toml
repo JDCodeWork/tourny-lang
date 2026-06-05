@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 num_enum = "0.7.6"
+rand = "0.10.1"

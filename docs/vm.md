@@ -28,29 +28,27 @@ Derivados:
 
 Nota: no hay semilla en MVP; la reproducibilidad queda para post‑MVP.
 
-## Instrucciones de bytecode (stack VM)
+## Instrucciones de bytecode (stack VM) — MVP
 
-- `PUSH_STR <s>`
-- `PUSH_INT <n>`
+- `PushNum <n>` — push número a stack
+- `PushStr <idx>` — push índice string a stack (string lookup en VM.strings)
+- `AddPlayer` — pop nombre de stack, agregar a estado torneo
+- `Pop` — descartar tope de stack
+- `Print` — imprimir tope de stack
+- `Eoc` — fin comando
 
-- `JUGADOR_ADD` (pop: name)
-
+**Pendiente MVP** (post-MVP):
 - `EMPAREJAR_GEN` (genera `partidos`)
-
 - `RESULTADO_ADD` (pop: scoreB, scoreA, jugadorB, jugadorA)
-
-- `TABLA_CALC` (calcula tabla y la deja en un registro interno)
-- `TABLA_PRINT` (imprime tabla calculada)
-
-- `GANADOR_CALC` (calcula líder/es)
-- `GANADOR_PRINT` (imprime líder/es)
+- `TABLA_CALC`, `TABLA_PRINT`
+- `GANADOR_CALC`, `GANADOR_PRINT`
 
 ## Mapeo comando -> bytecode (MVP)
 
 **JUGADOR**
 ```
 JUGADOR "Ana"
-=> PUSH_STR "Ana"; JUGADOR_ADD
+=> PushStr "Ana"; AddPlayer
 ```
 
 **EMPAREJAR**
@@ -62,7 +60,7 @@ EMPAREJAR
 **RESULTADO**
 ```
 RESULTADO "Ana" vs "Luis" 3-1
-=> PUSH_STR "Ana"; PUSH_STR "Luis"; PUSH_INT 3; PUSH_INT 1; RESULTADO_ADD
+=> PushStr "Ana"; PushStr "Luis"; PushInt 3; PushInt 1; AddResult
 ```
 
 **TABLA**
