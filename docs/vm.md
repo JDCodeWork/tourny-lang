@@ -1,13 +1,13 @@
 # Bytecode y VM (MVP)
 
-Este documento describe el **bytecode mínimo** y la VM (máquina de pila) necesarios para el MVP.
+Este documento describe el **bytecode mínimo** y la VM (sin stack) necesarios para el MVP.
 
 La sintaxis de comandos está en `docs/sintaxis.md`. La lista de mejoras post‑MVP está en `docs/timeline.md`.
 
 ## Modelo de ejecución
 
 - Cada línea se tokeniza/parsea y se compila a bytecode.
-- La VM ejecuta ese bytecode inmediatamente y actualiza el estado.
+- La VM ejecuta ese bytecode inmediatamente sin usar pila (stack) — lee directamente del bytecode.
 - En CLI, `TABLA` y `GANADOR` imprimen salida.
 
 ## Estado mínimo en memoria (MVP)
@@ -28,49 +28,48 @@ Derivados:
 
 Nota: no hay semilla en MVP; la reproducibilidad queda para post‑MVP.
 
-## Instrucciones de bytecode (stack VM) — MVP
+## Instrucciones de bytecode (sin stack) — MVP
 
-- `PushNum <n>` — push número a stack
-- `PushStr <idx>` — push índice string a stack (string lookup en VM.strings)
-- `AddPlayer` — pop nombre de stack, agregar a estado torneo
-- `Pop` — descartar tope de stack
-- `Print` — imprimir tope de stack
+- `AddPlayer` — lee índice string del bytecode, agrega jugador a estado torneo
+- `MakeGroups` — genera enfrentamientos (round-robin)
+- `Show` — lee opción del bytecode y muestra información:
+  - `1` — muestra lista de jugadores
+  - `2` — muestra grupos/enfrentamientos
 - `Eoc` — fin comando
 
 **Pendiente MVP** (post-MVP):
-- `EMPAREJAR_GEN` (genera `partidos`)
-- `RESULTADO_ADD` (pop: scoreB, scoreA, jugadorB, jugadorA)
-- `TABLA_CALC`, `TABLA_PRINT`
-- `GANADOR_CALC`, `GANADOR_PRINT`
+- `AddResult` (lee: jugadorA, jugadorB, scoreA, scoreB)
+- `CalcTable`, `ShowTable`
+- `CalcWinner`, `ShowWinner`
 
 ## Mapeo comando -> bytecode (MVP)
 
 **JUGADOR**
 ```
 JUGADOR "Ana"
-=> PushStr "Ana"; AddPlayer
+=> AddPlayer <string_index>
 ```
 
 **EMPAREJAR**
 ```
 EMPAREJAR
-=> EMPAREJAR_GEN
+=> MakeGroups
+```
+
+**VER JUGADORES**
+```
+VER JUGADORES
+=> Show 1
+```
+
+**VER GRUPOS**
+```
+VER GRUPOS
+=> Show 2
 ```
 
 **RESULTADO**
 ```
 RESULTADO "Ana" vs "Luis" 3-1
-=> PushStr "Ana"; PushStr "Luis"; PushInt 3; PushInt 1; AddResult
-```
-
-**TABLA**
-```
-TABLA
-=> TABLA_CALC; TABLA_PRINT
-```
-
-**GANADOR**
-```
-GANADOR
-=> GANADOR_CALC; GANADOR_PRINT
+=> AddResult <playerA_idx> <playerB_idx> <scoreA> <scoreB>
 ```

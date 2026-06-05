@@ -4,7 +4,7 @@ use std::{slice, vec};
 use crate::vm::StrRef;
 
 #[derive(Debug)]
-pub struct PlayerId(pub u8);
+pub struct PlayerRef(pub u8);
 
 #[derive(Debug)]
 pub struct Player {
@@ -21,12 +21,12 @@ impl From<u8> for Player {
 
 #[derive(Debug)]
 pub struct Group {
-    players: Vec<PlayerId>,
+    players: Vec<PlayerRef>,
     round: u8,
 }
 
 impl Group {
-    pub fn iter_players(&self) -> slice::Iter<'_, PlayerId> {
+    pub fn iter_players(&self) -> slice::Iter<'_, PlayerRef> {
         self.players.iter()
     }
 }
@@ -43,7 +43,7 @@ impl State {
         self.players.push(Player { name });
     }
 
-    pub fn get_player(&self, id: &PlayerId) -> &Player {
+    pub fn get_player(&self, id: &PlayerRef) -> &Player {
         &self.players[id.0 as usize]
     }
 
@@ -56,8 +56,8 @@ impl State {
     }
 
     pub fn make_groups(&mut self) {
-        let mut players_ids: Vec<PlayerId> =
-            (0..self.players.len()).map(|i| PlayerId(i as u8)).collect();
+        let mut players_ids: Vec<PlayerRef> =
+            (0..self.players.len()).map(|i| PlayerRef(i as u8)).collect();
 
         let mut rng = rand::rng();
         players_ids.shuffle(&mut rng);

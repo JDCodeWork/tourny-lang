@@ -27,9 +27,8 @@ fn main() {
         Op::AddPlayer,
         5,
         Op::MakeGroups,
-        Op::PushNum,
+        Op::Show,
         2,
-        Op::Print,
         Op::Eoc
     ];
 
