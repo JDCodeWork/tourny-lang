@@ -1,6 +1,6 @@
 use num_enum::TryFromPrimitive;
 
-use crate::tournment::{Player, State};
+use crate::state::State;
 
 #[derive(Debug)]
 pub struct Error;
@@ -10,6 +10,7 @@ pub struct Error;
 pub enum OpCode {
     AddPlayer,
     MakeGroups,
+    MakeMatches,
 
     Show,
     Eoc, // End Of Command
@@ -53,10 +54,16 @@ impl VM {
             match op {
                 OpCode::AddPlayer => self.add_player(),
                 OpCode::MakeGroups => self.make_groups(),
+                OpCode::MakeMatches => self.make_matches(),
                 OpCode::Show => self.show(),
                 OpCode::Eoc => return Ok(()),
             }?
         }
+    }
+
+    fn make_matches(&mut self) -> Result<(), Error> {
+        self.state.make_matches();
+        Ok(())
     }
 
     fn make_groups(&mut self) -> Result<(), Error> {
@@ -70,38 +77,18 @@ impl VM {
         Ok(())
     }
 
-    // TODO: Extract into a dedicated module to decouple the VM implementation from the interface
     fn show(&mut self) -> Result<(), Error> {
         let option = self.read_byte();
 
-        match option {
-            1 => self.show_players(),
-            2 => self.show_groups(),
+        let str = match option {
+            1 => self.state.display_players(&self.strings),
+            2 => self.state.display_groups(&self.strings),
             _ => return Err(Error),
-        }
+        };
+
+        println!("{str}");
 
         Ok(())
-    }
-
-    fn show_players(&self) {
-        for Player { name } in self.state.iter_players() {
-            let name = &self.strings[name.0 as usize];
-
-            print!(" {name} | ");
-        }
-        println!();
-    }
-
-    fn show_groups(&self) {
-        for (idx, group) in self.state.iter_groups().enumerate() {
-            print!("Group {}: ", idx + 1);
-
-            for player_id in group.iter_players() {
-                let name_id = self.state.get_player(player_id).name.0;
-                print!("{}, ", self.strings[name_id as usize]);
-            }
-            println!();
-        }
     }
 
     fn read_byte(&mut self) -> u8 {

@@ -1,8 +1,4 @@
-mod macros;
-mod tournment;
-mod vm;
-
-use vm::{OpCode as Op, VM};
+use tmt_lang::vm::{OpCode as Op, VM};
 
 fn main() {
     let strs = vec![
@@ -13,23 +9,23 @@ fn main() {
         "Rodriguez".to_string(),
         "Jaime".to_string(),
     ];
-    let code: Vec<u8> = bytecode![
-        Op::AddPlayer,
+    let code: Vec<u8> = vec![
+        Op::AddPlayer as u8,
         0,
-        Op::AddPlayer,
+        Op::AddPlayer as u8,
         1,
-        Op::AddPlayer,
+        Op::AddPlayer as u8,
         2,
-        Op::AddPlayer,
+        Op::AddPlayer as u8,
         3,
-        Op::AddPlayer,
+        Op::AddPlayer as u8,
         4,
-        Op::AddPlayer,
+        Op::AddPlayer as u8,
         5,
-        Op::MakeGroups,
-        Op::Show,
+        Op::MakeGroups as u8,
+        Op::Show as u8,
         2,
-        Op::Eoc
+        Op::Eoc as u8,
     ];
 
     let mut vm = VM::default();
