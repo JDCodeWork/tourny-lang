@@ -1,44 +1,57 @@
 use rand::seq::SliceRandom;
-use std::{slice, vec};
+use std::{ops::Index, slice, vec};
 
-use crate::vm::StrRef;
+use crate::vm::StrId;
 
 #[derive(Debug, Clone, Copy)]
-pub struct PlayerRef(pub u8);
+pub struct PlayerId(u8);
+
+impl PlayerId {
+    pub fn index(&self) -> usize {
+        self.0 as usize
+    }
+}
 
 #[derive(Debug)]
 pub struct Player {
-    pub name: StrRef,
+    pub name: StrId,
 }
 
 impl From<u8> for Player {
     fn from(value: u8) -> Self {
         Self {
-            name: StrRef(value),
+            name: StrId::new(value),
         }
     }
 }
 
 #[derive(Debug, Clone, Copy)]
-struct GroupRef(u8);
+pub struct GroupId(u8);
+impl GroupId {
+    pub fn index(&self) -> usize {
+        self.0 as usize
+    }
+}
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Group {
-    players: Vec<PlayerRef>,
+    players: Vec<PlayerId>,
     round: u8,
 }
 
 impl Group {
-    pub fn iter_players(&self) -> slice::Iter<'_, PlayerRef> {
+    pub fn players(&self) -> slice::Iter<'_, PlayerId> {
         self.players.iter()
     }
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Match {
-    group: GroupRef,
-    fst_player: PlayerRef,
-    snd_player: PlayerRef,
+    group: GroupId,
+    fst_player: PlayerId,
+    snd_player: PlayerId,
     result: [u8; 2],
 }
 
@@ -52,34 +65,25 @@ pub struct State {
 }
 
 impl State {
-    pub fn add_player(&mut self, name: StrRef) {
+    pub fn add_player(&mut self, name: StrId) {
         self.players.push(Player { name });
     }
 
-    pub fn get_player(&self, id: &PlayerRef) -> &Player {
-        &self.players[id.0 as usize]
-    }
-
-    pub fn get_group(&self, id: &GroupRef) -> &Group {
-        &self.groups[id.0 as usize]
-    }
-
-    pub fn iter_matches(&self) -> slice::Iter<'_, Match> {
+    pub fn matches(&self) -> slice::Iter<'_, Match> {
         self.matches.iter()
     }
 
-    pub fn iter_players(&self) -> slice::Iter<'_, Player> {
+    pub fn players(&self) -> slice::Iter<'_, Player> {
         self.players.iter()
     }
 
-    pub fn iter_groups(&self) -> slice::Iter<'_, Group> {
+    pub fn groups(&self) -> slice::Iter<'_, Group> {
         self.groups.iter()
     }
 
     pub fn make_groups(&mut self) {
-        let mut players_ids: Vec<PlayerRef> = (0..self.players.len())
-            .map(|i| PlayerRef(i as u8))
-            .collect();
+        let mut players_ids: Vec<PlayerId> =
+            (0..self.players.len()).map(|i| PlayerId(i as u8)).collect();
 
         let mut rng = rand::rng();
         players_ids.shuffle(&mut rng);
@@ -104,15 +108,15 @@ impl State {
     }
 
     pub fn make_matches(&mut self) {
-        let groups: Vec<GroupRef> = (0..self.groups.len()).map(|i| GroupRef(i as u8)).collect();
+        let groups: Vec<GroupId> = (0..self.groups.len()).map(|i| GroupId(i as u8)).collect();
 
         for group in groups {
             self.make_matches_group(group);
         }
     }
 
-    fn make_matches_group(&mut self, group: GroupRef) {
-        let mut players = self.groups[group.0 as usize].players.clone();
+    fn make_matches_group(&mut self, group: GroupId) {
+        let mut players = self[group].players.clone();
 
         let rounds = players.len() - 1;
         let matches_per_round = players.len() / 2;
@@ -132,5 +136,21 @@ impl State {
             let last = players.pop().unwrap();
             players.insert(1, last);
         }
+    }
+}
+
+impl Index<PlayerId> for State {
+    type Output = Player;
+
+    fn index(&self, id: PlayerId) -> &Self::Output {
+        &self.players[id.index()]
+    }
+}
+
+impl Index<GroupId> for State {
+    type Output = Group;
+
+    fn index(&self, id: GroupId) -> &Self::Output {
+        &self.groups[id.index()]
     }
 }
