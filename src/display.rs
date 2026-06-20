@@ -5,34 +5,65 @@ use crate::{
 
 use std::fmt::Write;
 
-// TODO: Create Show enum with the display target and implement render funtion inside of state
-impl State {
-    pub fn display_groups(&self, str: &StrPool) -> String {
-        let mut out = String::new();
-        for (idx, group) in self.groups().enumerate() {
-            let names = group
-                .players()
-                .map(|id| &str[self[*id].name])
-                .collect::<Vec<_>>()
-                .join(", ");
+pub enum ShowTarget {
+    Groups,
+    Matches,
+    Players,
+}
 
-            // TODO: unwrap
-            writeln!(out, "Group {}: {}", idx + 1, names).unwrap();
+impl State {
+    pub fn render(&self, target: ShowTarget, str: &StrPool) -> String {
+        let mut out = String::new();
+
+        match target {
+            ShowTarget::Groups => self.display_groups(&mut out, str),
+            ShowTarget::Players => self.display_players(&mut out, str),
+            ShowTarget::Matches => self.display_matches(&mut out, str),
         }
 
         out
     }
 
-    pub fn display_players(&self, str: &StrPool) -> String {
-        let mut out = String::new();
+    fn display_groups(&self, out: &mut String, str: &StrPool) {
+        let _ = writeln!(out, "\tGrupos\n======================\n");
 
+        for (idx, group) in self.groups().enumerate() {
+            let names = group
+                .players()
+                .map(|id| &str[self.player(*id).name])
+                .collect::<Vec<_>>()
+                .join("\n - ");
+
+            let _ = writeln!(out, "Grupo {}\n - {}\n", idx + 1, names);
+        }
+    }
+
+    fn display_matches(&self, out: &mut String, str: &StrPool) {
+        let _ = writeln!(out, "\tEncuentros\n==========================\n");
+
+        for (i, group) in self.groups().enumerate() {
+            let _ = writeln!(out, "Grupo {}:", i + 1);
+
+            for match_id in group.matches() {
+                let match_ = self.match_(*match_id);
+
+                let (p_id_1, p_id_2) = match_.players();
+                let p_name_1 = &str[self.player(p_id_1).name];
+                let p_name_2 = &str[self.player(p_id_2).name];
+
+                let [r1, r2] = match_.result();
+
+                let _ = writeln!(out, "{p_name_1}\t{r1} - {r2} {p_name_2}");
+            }
+            let _ = writeln!(out);
+        }
+    }
+
+    pub fn display_players(&self, out: &mut String, str: &StrPool) {
         for Player { name } in self.players() {
             let name = &str[*name];
 
-            out += &format!(" {name} | ");
+            let _ = writeln!(out, "{} |", name);
         }
-        out += "\n";
-
-        out
     }
 }

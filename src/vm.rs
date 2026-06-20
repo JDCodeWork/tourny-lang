@@ -2,7 +2,7 @@ use std::ops::Index;
 
 use num_enum::TryFromPrimitive;
 
-use crate::state::State;
+use crate::{display::ShowTarget, state::State};
 
 #[derive(Debug)]
 pub struct Error;
@@ -100,13 +100,15 @@ impl<'a> VM<'a> {
     fn show(&mut self) -> Result<(), Error> {
         let option = self.read_byte();
 
-        let str = match option {
-            1 => self.state.display_players(&self.str_pool),
-            2 => self.state.display_groups(&self.str_pool),
+        let target = match option {
+            1 => ShowTarget::Players,
+            2 => ShowTarget::Groups,
+            3 => ShowTarget::Matches,
             _ => return Err(Error),
         };
 
-        println!("{str}");
+        let out = self.state.render(target, &self.str_pool);
+        println!("{out}");
 
         Ok(())
     }

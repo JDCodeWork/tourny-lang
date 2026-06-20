@@ -17,8 +17,9 @@ fn main() {
         Op::AddPlayer as u8,
         5,
         Op::MakeGroups as u8,
+        Op::MakeMatches as u8,
         Op::Show as u8,
-        2,
+        3,
         Op::Eoc as u8,
     ];
 

@@ -1,42 +1,37 @@
 use rand::seq::SliceRandom;
-use std::{ops::Index, slice, vec};
+use std::{slice, vec};
 
 use crate::vm::StrId;
 
-#[derive(Debug, Clone, Copy)]
-pub struct PlayerId(u8);
+macro_rules! define_id {
+    ($name:ident) => {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub struct $name(u8);
 
-impl PlayerId {
-    pub fn index(&self) -> usize {
-        self.0 as usize
-    }
+        impl $name {
+            pub fn new(id: u8) -> Self {
+                Self(id)
+            }
+
+            pub fn index(self) -> usize {
+                self.0 as usize
+            }
+        }
+    };
 }
 
+define_id!(PlayerId);
 #[derive(Debug)]
 pub struct Player {
     pub name: StrId,
 }
 
-impl From<u8> for Player {
-    fn from(value: u8) -> Self {
-        Self {
-            name: StrId::new(value),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct GroupId(u8);
-impl GroupId {
-    pub fn index(&self) -> usize {
-        self.0 as usize
-    }
-}
-
+define_id!(GroupId);
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct Group {
     players: Vec<PlayerId>,
+    matches: Vec<MatchId>,
     round: u8,
 }
 
@@ -44,15 +39,29 @@ impl Group {
     pub fn players(&self) -> slice::Iter<'_, PlayerId> {
         self.players.iter()
     }
+
+    pub fn matches(&self) -> slice::Iter<'_, MatchId> {
+        self.matches.iter()
+    }
 }
 
+define_id!(MatchId);
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct Match {
-    group: GroupId,
     fst_player: PlayerId,
     snd_player: PlayerId,
     result: [u8; 2],
+}
+
+impl Match {
+    pub fn players(&self) -> (PlayerId, PlayerId) {
+        (self.fst_player, self.snd_player)
+    }
+
+    pub fn result(&self) -> [u8; 2] {
+        self.result
+    }
 }
 
 #[derive(Default, Debug)]
@@ -96,6 +105,7 @@ impl State {
         let mut groups: Vec<Group> = (0..groups_count)
             .map(|_| Group {
                 players: vec![],
+                matches: vec![],
                 round: self.curr_round,
             })
             .collect();
@@ -110,13 +120,17 @@ impl State {
     pub fn make_matches(&mut self) {
         let groups: Vec<GroupId> = (0..self.groups.len()).map(|i| GroupId(i as u8)).collect();
 
-        for group in groups {
-            self.make_matches_group(group);
+        for group_id in groups {
+            let matches = self.make_matches_group(group_id);
+
+            let group = &mut self.groups[group_id.index()];
+            group.matches.extend(matches);
         }
     }
 
-    fn make_matches_group(&mut self, group: GroupId) {
-        let mut players = self[group].players.clone();
+    fn make_matches_group(&mut self, id: GroupId) -> Vec<MatchId> {
+        let mut players = self.group(id).players.clone();
+        let mut matches_ids = Vec::new();
 
         let rounds = players.len() - 1;
         let matches_per_round = players.len() / 2;
@@ -127,30 +141,29 @@ impl State {
                     fst_player: players[i],
                     snd_player: players[players.len() - 1 - i],
                     result: [0, 0],
-                    group,
                 };
+                let match_id = MatchId::new(self.matches.len() as u8);
 
+                matches_ids.push(match_id);
                 self.matches.push(match_);
             }
 
             let last = players.pop().unwrap();
             players.insert(1, last);
         }
+
+        matches_ids
     }
-}
 
-impl Index<PlayerId> for State {
-    type Output = Player;
-
-    fn index(&self, id: PlayerId) -> &Self::Output {
+    pub fn player(&self, id: PlayerId) -> &Player {
         &self.players[id.index()]
     }
-}
 
-impl Index<GroupId> for State {
-    type Output = Group;
+    pub fn match_(&self, id: MatchId) -> &Match {
+        &self.matches[id.index()]
+    }
 
-    fn index(&self, id: GroupId) -> &Self::Output {
+    pub fn group(&self, id: GroupId) -> &Group {
         &self.groups[id.index()]
     }
 }
