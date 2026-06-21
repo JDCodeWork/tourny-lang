@@ -34,11 +34,12 @@ Nota: no hay semilla en MVP; la reproducibilidad queda para post‑MVP.
 - `MakeGroups` — genera enfrentamientos (round-robin)
 - `Show` — lee opción del bytecode y muestra información:
   - `1` — muestra lista de jugadores
-  - `2` — muestra grupos/enfrentamientos
+  - `2` — muestra grupos
+  - `3` - muestra enfrentamientos
 - `Eoc` — fin comando
 
-**Pendiente MVP** (post-MVP):
-- `AddResult` (lee: jugadorA, jugadorB, scoreA, scoreB)
+**Pendiente MVP**:
+- `SetResult` (lee: matchId, scoreA, scoreB)
 - `CalcTable`, `ShowTable`
 - `CalcWinner`, `ShowWinner`
 
@@ -68,8 +69,14 @@ VER GRUPOS
 => Show 2
 ```
 
+**VER ENFRENTAMIENTOS**
+```
+VER ENFRENTAMIENTOS
+=> Show 3
+```
+
 **RESULTADO**
 ```
-RESULTADO "Ana" vs "Luis" 3-1
-=> AddResult <playerA_idx> <playerB_idx> <scoreA> <scoreB>
+ENFRENTAMIENTO 1 RESULTADO 3-1
+=> SetResult <match_id> <scoreA> <scoreB>
 ```

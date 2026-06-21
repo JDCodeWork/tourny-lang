@@ -29,11 +29,12 @@ VER <opción>
 ```
 Muestra información basada en la opción:
 - `JUGADORES` — muestra la lista de todos los jugadores agregados.
-- `GRUPOS` — muestra los grupos/enfrentamientos generados con `EMPAREJAR`.
+- `GRUPOS` — muestra los grupos generados.
+- `EMPAREJAMIENTOS` — muestra los emparejamientos generados por grupo.
 
-### RESULTADO
+### ENFRENTAMIENTO
 ```
-RESULTADO "JugadorA" vs "JugadorB" A-B
+ENFRENTAMIENTO <NO_ENGRENTAMIENTO> <SCORE_A>-<SCORE_B>
 ```
 Registra el resultado de un partido.
 
@@ -62,18 +63,15 @@ Muestra el/los líder(es) actual(es) según la tabla:
 ## Ejemplo completo (MVP)
 
 ```
-JUGADOR "Ana"
-JUGADOR "Luis"
-JUGADOR "Marta"
-JUGADOR "Carlos"
+JUGADORES "Ana", "Luis", "Marta", "Carlos"
 
 EMPAREJAR
 
 VER JUGADORES
 VER GRUPOS
 
-RESULTADO "Ana" vs "Luis" 3-1
-RESULTADO "Marta" vs "Carlos" 2-3
+ENFRENTAMIENTO 1 RESULTADO 3-1
+ENFRENTAMIENTO 2 RESULTADO 2-3
 
 TABLA
 GANADOR
@@ -85,14 +83,14 @@ GANADOR
 linea      := comando ;
 comando    := jugador | emparejar | ver | resultado | tabla | ganador ;
 
-jugador    := "JUGADOR" cadena ;
+jugador    := "JUGADOR" cadena | "JUGADORES" cadena ( "," cadena)*;
 emparejar  := "EMPAREJAR" ;
 ver        := "VER" opcion ;
-resultado  := "RESULTADO" cadena "vs" cadena int "-" int ;
+resultado  := "ENFRENTAMIENTO" int "RESULTADO" int "-" int ;
 tabla      := "TABLA" ;
 ganador    := "GANADOR" ;
 
-opcion     := "JUGADORES" | "GRUPOS" ;
+opcion     := "JUGADORES" | "GRUPOS" | "EMPAREJAMIENTOS" ;
 cadena     := string_entre_comillas ;
 int        := numero_entero ;
 ```

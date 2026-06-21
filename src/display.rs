@@ -53,7 +53,11 @@ impl State {
 
                 let [r1, r2] = match_.result();
 
-                let _ = writeln!(out, "{p_name_1}\t{r1} - {r2} {p_name_2}");
+                let _ = writeln!(
+                    out,
+                    "[{}]      {p_name_1:<10} {r1} - {r2}\t{p_name_2}",
+                    match_id.index()
+                );
             }
             let _ = writeln!(out);
         }

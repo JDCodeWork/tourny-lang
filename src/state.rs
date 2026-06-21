@@ -129,17 +129,14 @@ impl State {
     }
 
     fn make_matches_group(&mut self, id: GroupId) -> Vec<MatchId> {
-        let mut players = self.group(id).players.clone();
+        let players = self.group(id).players.clone();
         let mut matches_ids = Vec::new();
 
-        let rounds = players.len() - 1;
-        let matches_per_round = players.len() / 2;
-
-        for _round in 0..rounds {
-            for i in 0..matches_per_round {
+        for i in 0..players.len() {
+            for j in (i + 1)..players.len() {
                 let match_ = Match {
                     fst_player: players[i],
-                    snd_player: players[players.len() - 1 - i],
+                    snd_player: players[j],
                     result: [0, 0],
                 };
                 let match_id = MatchId::new(self.matches.len() as u8);
@@ -147,9 +144,6 @@ impl State {
                 matches_ids.push(match_id);
                 self.matches.push(match_);
             }
-
-            let last = players.pop().unwrap();
-            players.insert(1, last);
         }
 
         matches_ids
